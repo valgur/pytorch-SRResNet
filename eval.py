@@ -9,11 +9,13 @@ import numpy as np
 import scipy.io as sio
 import torch
 
+from hubconf import SRResNet
+
 parser = argparse.ArgumentParser(description="PyTorch SRResNet Eval")
-parser.add_argument("--device", default="cuda", help="device to use, e.g. 'cpu', 'cuda' or 'cuda:0'")
-parser.add_argument("--model", default="model/model_srresnet.pth", type=str, help="model path")
-parser.add_argument("--dataset", default="Set5", type=str, help="dataset name, Default: Set5")
-parser.add_argument("--scale", default=4, type=int, help="scale factor, Default: 4")
+parser.add_argument("--device", default="cuda", help="device to use, e.g. 'cpu', 'cuda' (default) or 'cuda:0'")
+parser.add_argument("--model", type=str, help="local model path (optional)")
+parser.add_argument("--dataset", default="Set5", type=str, help="dataset name, default: Set5")
+parser.add_argument("--scale", default=4, type=int, help="scale factor, default: 4")
 
 
 def PSNR(pred, gt, shave_border=0):
@@ -32,7 +34,10 @@ device = torch.device(opt.device)
 
 torch.set_grad_enabled(False)
 
-model = torch.load(opt.model, map_location=device)["model"]
+if opt.model:
+    model = torch.load(opt.model, map_location=device)["model"]
+else:
+    model = SRResNet(pretrained=True, map_location=device)
 model.to(device)
 
 image_list = glob.glob("./testsets/{}/*.*".format(opt.dataset))

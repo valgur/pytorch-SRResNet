@@ -1,5 +1,5 @@
 # PyTorch SRResNet
-Implementation of Paper: "Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network"(https://arxiv.org/abs/1609.04802) in PyTorch
+Implementation of Paper: "Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network" (https://arxiv.org/abs/1609.04802) in PyTorch
 
 ## Usage
 ### Training
@@ -34,51 +34,50 @@ python main_srresnet.py --cuda --vgg_loss --gpus 0
 
 ### demo
 ```
-usage: demo.py [-h] [--cuda] [--model MODEL] [--image IMAGE]
-               [--dataset DATASET] [--scale SCALE] [--gpus GPUS]
+usage: demo.py [-h] [--device DEVICE] [--model MODEL] [--image IMAGE]
+               [--dataset DATASET] [--scale SCALE]
 
 optional arguments:
   -h, --help         show this help message and exit
-  --cuda             use cuda?
-  --model MODEL      model path
+  --device DEVICE    device to use, e.g. 'cpu', 'cuda' or 'cuda:0'
+  --model MODEL      local model path (optional)
   --image IMAGE      image name
   --dataset DATASET  dataset name
   --scale SCALE      scale factor, Default: 4
-  --gpus GPUS        gpu ids (default: 0)
 ```
-We convert Set5 test set images to mat format using Matlab, for simple image reading
+We converted Set5 test set images to mat format using Matlab, for simple image reading.
 An example of usage is shown as follows:
 ```
-python demo.py --model model/model_srresnet.pth --dataset Set5 --image butterfly_GT --scale 4 --cuda
+python demo.py --dataset Set5 --image butterfly_GT --scale 4
 ```
 
 ### Eval
 ```
-usage: eval.py [-h] [--cuda] [--model MODEL] [--dataset DATASET]
-               [--scale SCALE] [--gpus GPUS]
+usage: eval.py [-h] [--device DEVICE] [--model MODEL] [--dataset DATASET]
+               [--scale SCALE]
 
 optional arguments:
   -h, --help         show this help message and exit
-  --cuda             use cuda?
-  --model MODEL      model path
-  --dataset DATASET  dataset name, Default: Set5
-  --scale SCALE      scale factor, Default: 4
-  --gpus GPUS        gpu ids (default: 0)
+  --device DEVICE    device to use, e.g. 'cpu', 'cuda' (default) or 'cuda:0'
+  --model MODEL      local model path (optional)
+  --dataset DATASET  dataset name, default: Set5
+  --scale SCALE      scale factor, default: 4
 ```
-We convert Set5 test set images to mat format using Matlab. Since PSNR is evaluated on only Y channel, we import matlab in python, and use rgb2ycbcr function for converting rgb image to ycbcr image. You will have to setup the matlab python interface so as to import matlab library. 
+We converted Set5 test set images to mat format using Matlab.
 An example of usage is shown as follows:
 ```
-python eval.py --model model/model_srresnet.pth --dataset Set5 --cuda
+python eval.py --dataset Set5
 ```
 
 ### Prepare Training dataset
+  - Download and extract [testsets.tar.gz](https://github.com/valgur/pytorch-SRResNet/releases/download/v1.0/testsets.tar.gz).
   - Please refer [Code for Data Generation](https://github.com/twtygqyy/pytorch-SRResNet/tree/master/data) for creating training files.
   - Data augmentations including flipping, rotation, downsizing are adopted.
 
 
 ### Performance
-  - We provide a pretrained model trained on [291](http://cv.snu.ac.kr/research/VDSR/train_data.zip) images with data augmentation
-  - Instance Normalization is applied instead of Batch Normalization for better performance 
+  - We provide a pretrained model trained on [291 images](http://cv.snu.ac.kr/research/VDSR/train_data.zip) with data augmentation
+  - Instance Normalization is applied instead of Batch Normalization for better performance
   - So far performance in PSNR is not as good as paper, any suggestion is welcome
   
 | Dataset        | SRResNet Paper | SRResNet PyTorch|
@@ -88,7 +87,7 @@ python eval.py --model model/model_srresnet.pth --dataset Set5 --cuda
 | BSD100         | 27.58          | **27.51**       |
 
 ### Result
-From left to right are ground truth, bicubic and SRResNet
+From left to right are ground truth, bicubic and SRResNet.
 <p>
-  <img src='result/result.png' height='260' width='700'/>
+  <img src="result/result.png" height="246px" width="700px"/>
 </p>
