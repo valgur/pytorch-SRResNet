@@ -1,74 +1,63 @@
-import argparse, os
-import torch
-from torch.autograd import Variable
-import numpy as np
-import time, math
-import scipy.io as sio
+from __future__ import print_function, division, absolute_import
+
+import argparse
+import math
+import time
+
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.io as sio
+import torch
 
 parser = argparse.ArgumentParser(description="PyTorch SRResNet Demo")
-parser.add_argument("--cuda", action="store_true", help="use cuda?")
+parser.add_argument("--device", default="cuda", help="device to use, e.g. 'cpu', 'cuda' or 'cuda:0'")
 parser.add_argument("--model", default="model/model_srresnet.pth", type=str, help="model path")
 parser.add_argument("--image", default="butterfly_GT", type=str, help="image name")
 parser.add_argument("--dataset", default="Set5", type=str, help="dataset name")
 parser.add_argument("--scale", default=4, type=int, help="scale factor, Default: 4")
-parser.add_argument("--gpus", default="0", type=str, help="gpu ids (default: 0)")
+
 
 def PSNR(pred, gt, shave_border=0):
     height, width = pred.shape[:2]
     pred = pred[shave_border:height - shave_border, shave_border:width - shave_border]
     gt = gt[shave_border:height - shave_border, shave_border:width - shave_border]
     imdff = pred - gt
-    rmse = math.sqrt(np.mean(imdff ** 2))
+    rmse = math.sqrt(np.mean(imdff**2))
     if rmse == 0:
         return 100
     return 20 * math.log10(255.0 / rmse)
 
+
 opt = parser.parse_args()
-cuda = opt.cuda
+device = torch.device(opt.device)
 
-if cuda:
-    print("=> use gpu id: '{}'".format(opt.gpus))
-    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpus
-    if not torch.cuda.is_available():
-            raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
+torch.set_grad_enabled(False)
 
-model = torch.load(opt.model)["model"]
+model = torch.load(opt.model, map_location=device)["model"]
+model.to(device)
 
 im_gt = sio.loadmat("testsets/" + opt.dataset + "/" + opt.image + ".mat")['im_gt']
 im_b = sio.loadmat("testsets/" + opt.dataset + "/" + opt.image + ".mat")['im_b']
 im_l = sio.loadmat("testsets/" + opt.dataset + "/" + opt.image + ".mat")['im_l']
-           
+
 im_gt = im_gt.astype(float).astype(np.uint8)
 im_b = im_b.astype(float).astype(np.uint8)
-im_l = im_l.astype(float).astype(np.uint8)      
+im_l = im_l.astype(float).astype(np.uint8)
 
-im_input = im_l.astype(np.float32).transpose(2,0,1)
-im_input = im_input.reshape(1,im_input.shape[0],im_input.shape[1],im_input.shape[2])
-im_input = Variable(torch.from_numpy(im_input/255.).float())
+im_input = torch.from_numpy(im_l).permute(2, 0, 1).to(device)
+im_input = im_input.float().div(255).unsqueeze(0)
 
-if cuda:
-    model = model.cuda()
-    im_input = im_input.cuda()
-else:
-    model = model.cpu()
-    
 start_time = time.time()
 out = model(im_input)
 elapsed_time = time.time() - start_time
 
-out = out.cpu()
+im_h = out.cpu().squeeze().numpy()
+im_h = np.clip(im_h, 0, 1) * 255
+im_h = im_h.transpose(1, 2, 0)
 
-im_h = out.data[0].numpy().astype(np.float32)
-
-im_h = im_h*255.
-im_h[im_h<0] = 0
-im_h[im_h>255.] = 255.            
-im_h = im_h.transpose(1,2,0)
-
-print("Dataset=",opt.dataset)
-print("Scale=",opt.scale)
-print("It takes {}s for processing".format(elapsed_time))
+print("Dataset=", opt.dataset)
+print("Scale=", opt.scale)
+print("It takes {:.3f} ms for processing".format(elapsed_time * 1e3))
 
 fig = plt.figure()
 ax = plt.subplot("131")
